@@ -225,7 +225,8 @@ def _jsd_loss_chunk(
         are `torch.no_grad()` sums for this chunk only — callers accumulate them across chunks and reduce across ranks,
         exactly as the non-chunked path already did.
     """
-    logits = hidden_chunk.float() @ lm_head_weight.float().t()
+    # Project in the model dtype and upcast only afterwards, as the other chunked projections do.
+    logits = (hidden_chunk @ lm_head_weight.t()).float()
     if lm_head_bias is not None:
         logits = logits + lm_head_bias.float()
     if logit_scale != 1.0:
